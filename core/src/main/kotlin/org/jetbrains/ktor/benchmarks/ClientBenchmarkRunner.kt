@@ -1,5 +1,7 @@
 package org.jetbrains.ktor.benchmarks
 
+import org.junit.*
+import org.junit.rules.*
 import org.junit.runner.*
 import org.junit.runner.notification.*
 import org.junit.runners.*
@@ -9,10 +11,8 @@ import java.time.*
 import java.util.*
 
 open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(clazz) {
-    private val instance = testClass.javaClass.newInstance()
 
     protected fun setupHost() {
-        // TODO !!!
     }
 
     override fun run(notifier: RunNotifier) {
@@ -25,8 +25,6 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
 
         setupHost()
 
-
-
         super.run(notifier)
     }
 
@@ -35,6 +33,8 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
 
         notifier.fireTestStarted(description)
         try {
+            val instance = testClass.javaClass.newInstance()
+
             println("Warmup")
             for (i in 1..5) {
                 child.invokeExplosively(instance, DummyTimer)
@@ -42,28 +42,37 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
 
             println("Running test ${child.name}")
 
-            val allTimers = ArrayList<DefaultTimer>(1000)
-            for (i in 1..1000) {
-                val timer = DefaultTimer()
-                val total = timer.start(child.name)
-                child.invokeExplosively(instance, timer)
-                total.stop()
-                timer.measurements.forEach { it.ensureStopped() }
+            val rules = testClass.getAnnotatedFieldValues(instance, Rule::class.java, TestRule::class.java) +
+                    testClass.getAnnotatedMethodValues(instance, Rule::class.java, TestRule::class.java)
 
-                allTimers.add(timer)
+            val runAll = object : Statement() {
+                override fun evaluate() {
+                    val allTimers = ArrayList<DefaultTimer>(1000)
+                    for (i in 1..1000) {
+                        val timer = DefaultTimer()
+                        val total = timer.start(child.name)
+                        child.invokeExplosively(instance, timer)
+                        total.stop()
+                        timer.measurements.forEach { it.ensureStopped() }
+
+                        allTimers.add(timer)
+                    }
+
+                    val groupedBy = allTimers.flatMap { it.measurements }.groupBy { it.label }
+                    val metrics = groupedBy.mapValues { it.value.toMetric() }
+
+                    println("Test ${child.name} completed")
+                    val maxLabelLength = metrics.keys.maxBy { it.length }?.length ?: 0
+
+                    metrics.keys.sorted().forEach { name ->
+                        val m = metrics[name]!!
+
+                        println("    ${m.label.padEnd(maxLabelLength)} ${m.avg.prettyPrint()} (${m.min.prettyPrint()} .. ${m.max.prettyPrint()})")
+                    }
+                }
             }
 
-            val groupedBy = allTimers.flatMap { it.measurements }.groupBy { it.label }
-            val metrics = groupedBy.mapValues { it.value.toMetric() }
-
-            println("Test ${child.name} completed")
-            val maxLabelLength = metrics.keys.maxBy { it.length }?.length ?: 0
-
-            metrics.keys.sorted().forEach { name ->
-                val m = metrics[name]!!
-
-                println("    ${m.label.padEnd(maxLabelLength)} ${m.avg.prettyPrint()} (${m.min.prettyPrint()} .. ${m.max.prettyPrint()})")
-            }
+            runLeaf(rules.fold<TestRule, Statement>(runAll) { base, rule -> rule.apply(base, description) }, description, notifier)
 
             notifier.fireTestFinished(description)
         } catch (t: Throwable) {
@@ -71,7 +80,7 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
         }
     }
 
-    override fun getChildren(): MutableList<FrameworkMethod> = testClass.annotatedMethods.toMutableList()
+    override fun getChildren(): MutableList<FrameworkMethod> = testClass.annotatedMethods.filter { it.getAnnotation(Test::class.java) != null }.toMutableList()
 
     override fun describeChild(child: FrameworkMethod): Description {
         return Description.createTestDescription(testClass.name, child.name)

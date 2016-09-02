@@ -6,6 +6,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
+        <module>implementations</module>
     </modules>
 
     <groupId>org.jetbrains.ktor</groupId>

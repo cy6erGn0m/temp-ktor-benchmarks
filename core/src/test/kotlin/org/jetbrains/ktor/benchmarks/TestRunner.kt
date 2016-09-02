@@ -5,6 +5,9 @@ import org.junit.runner.*
 
 @RunWith(ClientBenchmarkRunner::class)
 class TestRunner {
+    @get:Rule
+    val index: ServerRule = ServerRule(DefaultTestApp)
+
     @Test
     fun smokeTest(timer: Timer) {
         Thread.sleep(1)
