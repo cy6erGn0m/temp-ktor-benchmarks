@@ -2,7 +2,7 @@ package org.jetbrains.ktor.benchmarks
 
 import org.jetbrains.ktor.auth.httpclient.*
 
-class TimerAwareHttpClientWrapper(val timer: Timer, val delegate: HttpClient) : HttpClient {
+class TimerAwareHttpClientWrapper(private val timer: Timer, private val delegate: HttpClient) : HttpClient {
     override fun openConnection(host: String, port: Int, secure: Boolean): HttpConnection
             = TimerAwareHttpConnectionWrapper(timer, delegate.openConnection(host, port, secure))
 
@@ -15,6 +15,11 @@ class TimerAwareHttpClientWrapper(val timer: Timer, val delegate: HttpClient) : 
                 measurement = timer.start("${method.value} $path")
             }
             measurement?.lap("response")
+        }
+
+        override fun close() {
+            measurement?.end()
+            delegate.close()
         }
     }
 }

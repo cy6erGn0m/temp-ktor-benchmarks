@@ -13,6 +13,10 @@
     <artifactId>ktor-benchmarks</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <ktor.version>0.1.9-SNAPSHOT</ktor.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

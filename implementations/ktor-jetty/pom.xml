@@ -11,5 +11,11 @@
 
     <artifactId>benchmarks-ktor-jetty</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>ktor-jetty</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+    </dependencies>
 </project>
