@@ -21,7 +21,7 @@ object DummyTimer : Timer {
 
         override fun ensureStopped() = true
 
-        override fun stop() {
+        override fun end() {
         }
     }
 }

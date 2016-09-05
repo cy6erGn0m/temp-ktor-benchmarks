@@ -8,22 +8,28 @@ import org.junit.runners.*
 import org.junit.runners.model.*
 import java.math.*
 import java.time.*
-import java.util.*
+import kotlin.reflect.*
 
-open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(clazz) {
-
-    protected fun setupHost() {
-    }
+class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(clazz) {
 
     override fun run(notifier: RunNotifier) {
-        for (i in 1..100000) {
-            warmUpTimer(DefaultTimer())
-        }
-        for (i in 1..100000) {
-            warmUpTimer(DummyTimer)
+        val warmUp = Description.createTestDescription(testClass.name, ":warmUp")
+        val warmUpStatement = object : Statement() {
+            override fun evaluate() {
+                for (i in 1..100000) {
+                    warmUpTimer(DefaultTimer())
+                }
+                for (i in 1..100000) {
+                    warmUpTimer(DummyTimer)
+                }
+
+                for (m in children) {
+                    runChildImpl(m, warmUp, true).evaluate()
+                }
+            }
         }
 
-        setupHost()
+        runLeaf(warmUpStatement, warmUp, notifier)
 
         super.run(notifier)
     }
@@ -31,34 +37,57 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
     override fun runChild(child: FrameworkMethod, notifier: RunNotifier) {
         val description = describeChild(child)
 
-        notifier.fireTestStarted(description)
         try {
-            val instance = testClass.javaClass.newInstance()
+            runLeaf(runChildImpl(child, description, false), description, notifier)
+        } catch (t: Throwable) {
+            notifier.fireTestFailure(Failure(description, t))
+        }
+    }
 
-            println("Warmup")
-            for (i in 1..5) {
-                child.invokeExplosively(instance, DummyTimer)
-            }
+    private fun runChildImpl(child: FrameworkMethod, description: Description, warmUp: Boolean): Statement {
+        val instance = testClass.onlyConstructor.newInstance()
 
-            println("Running test ${child.name}")
+        val benchmarkAnnotation = child.getAnnotation(Benchmark::class.java) ?: defaultBenchmark
 
-            val rules = testClass.getAnnotatedFieldValues(instance, Rule::class.java, TestRule::class.java) +
-                    testClass.getAnnotatedMethodValues(instance, Rule::class.java, TestRule::class.java)
+        val concurrency = benchmarkAnnotation.concurrency
+        val maxCount = benchmarkAnnotation.iterationsLimit
+        val minCount = Math.max(100, maxCount)
+        val maxDuration = benchmarkAnnotation.maxDurationMillis
 
-            val runAll = object : Statement() {
-                override fun evaluate() {
-                    val allTimers = ArrayList<DefaultTimer>(1000)
-                    for (i in 1..1000) {
-                        val timer = DefaultTimer()
-                        val total = timer.start(child.name)
-                        child.invokeExplosively(instance, timer)
-                        total.stop()
-                        timer.measurements.forEach { it.ensureStopped() }
+        testClass.annotatedMethods.filter { it.getAnnotation(Before::class.java) != null }.forEach { m ->
+            m.invokeExplosively(instance)
+        }
 
-                        allTimers.add(timer)
+        val rules = findRules(instance)
+
+        val runAll = object : Statement() {
+            override fun evaluate() {
+                val allTimers = if (warmUp) {
+                    for (i in 1..10) {
+                        child.invokeExplosively(instance)
+                    }
+                    emptyList()
+                } else {
+                    println("Running test ${child.name}")
+
+                    var count = 0
+                    val start = System.currentTimeMillis()
+
+                    while (count < maxCount && (count < minCount || ((System.currentTimeMillis() - start) < maxDuration))) {
+                        count++
+                        child.invokeExplosively(instance)
                     }
 
-                    val groupedBy = allTimers.flatMap { it.measurements }.groupBy { it.label }
+                    rules.filterIsInstance<TimerRule>()
+                }
+                testClass.annotatedMethods.filter { it.getAnnotation(After::class.java) != null }.forEach { m ->
+                    m.invokeExplosively(instance)
+                }
+
+                if (!warmUp) {
+                    allTimers.forEach { timer -> timer.measurements.forEach { it.ensureStopped() } }
+
+                    val groupedBy = allTimers.flatMap { it.measurements }.filter { it.laps.isNotEmpty() }.groupBy { it.label }
                     val metrics = groupedBy.mapValues { it.value.toMetric() }
 
                     println("Test ${child.name} completed")
@@ -71,13 +100,9 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
                     }
                 }
             }
-
-            runLeaf(rules.fold<TestRule, Statement>(runAll) { base, rule -> rule.apply(base, description) }, description, notifier)
-
-            notifier.fireTestFinished(description)
-        } catch (t: Throwable) {
-            notifier.fireTestFailure(Failure(description, t))
         }
+
+        return rules.fold<TestRule, Statement>(runAll) { base, rule -> rule.apply(base, description) }
     }
 
     override fun getChildren(): MutableList<FrameworkMethod> = testClass.annotatedMethods.filter { it.getAnnotation(Test::class.java) != null }.toMutableList()
@@ -87,6 +112,9 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
     }
 
     data class Metric(val label: String, val min: Duration, val max: Duration, val avg: Duration)
+
+    private fun findRules(instance: Any) = testClass.getAnnotatedFieldValues(instance, Rule::class.java, TestRule::class.java) +
+            testClass.getAnnotatedMethodValues(instance, Rule::class.java, TestRule::class.java)
 
     private fun List<Timer.Measurement>.toMetric(): Metric {
         if (isEmpty()) {
@@ -112,10 +140,19 @@ open class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod
     private fun warmUpTimer(timer: Timer) {
         timer.start("").apply {
             lap("")
-            stop()
+            end()
             ensureStopped()
             laps.firstOrNull()
         }
         timer.measurements.firstOrNull()
+    }
+
+    companion object {
+        private val defaultBenchmark by lazy { ClientBenchmarkRunner.Companion::class.functions.flatMap { it.annotations }.filterIsInstance<Benchmark>().single() }
+
+        @Benchmark // we use it to get annotation default values
+        @Suppress("UNUSED")
+        private fun dummyForBenchmark() {
+        }
     }
 }

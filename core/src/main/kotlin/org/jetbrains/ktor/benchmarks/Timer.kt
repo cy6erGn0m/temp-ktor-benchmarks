@@ -13,7 +13,7 @@ interface Timer {
 
         fun lap(label: String)
         fun ensureStopped(): Boolean
-        fun stop()
+        fun end()
 
         interface Lap {
             val timestamp: Long

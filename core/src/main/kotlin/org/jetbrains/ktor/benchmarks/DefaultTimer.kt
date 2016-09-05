@@ -39,7 +39,7 @@ class DefaultTimer : Timer {
             return false
         }
 
-        override fun stop() {
+        override fun end() {
             if (!ensureStopped()) {
                 throw IllegalStateException("Already stopped")
             }
