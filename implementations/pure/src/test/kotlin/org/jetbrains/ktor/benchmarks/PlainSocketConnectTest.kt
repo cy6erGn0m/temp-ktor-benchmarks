@@ -11,7 +11,7 @@ class PlainSocketConnectTest : AbstractConnectBenchmark() {
     private var socket: ServerSocket? = null
     private var acceptor: Thread? = null
 
-    override fun start() {
+    override fun start(port: Int) {
         socket = ServerSocket().apply {
             bind(InetSocketAddress(port))
         }

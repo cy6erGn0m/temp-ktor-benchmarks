@@ -1,22 +1,19 @@
 package org.jetbrains.ktor.benchmarks.scenarios
 
+import org.jetbrains.ktor.benchmarks.*
 import org.junit.*
 import java.io.*
 import java.net.*
 
-abstract class AbstractBenchmark {
+abstract class AbstractBenchmark : KtorBenchmark {
     protected var port = 0
-
-    protected abstract fun start()
-
-    protected abstract fun stop()
 
     @Before
     fun setUp() {
         do {
             try {
                 port = findFreePort()
-                start()
+                start(port)
                 waitForPort(port)
             } catch (e: BindException) {
                 stop()

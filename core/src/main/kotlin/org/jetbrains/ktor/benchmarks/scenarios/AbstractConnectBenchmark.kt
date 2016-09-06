@@ -9,7 +9,7 @@ abstract class AbstractConnectBenchmark : AbstractBenchmark() {
     val timer = TimerRule()
 
     @Test
-    @Benchmark(iterationsLimit = 1000)
+    @Benchmark(iterationsLimit = 100)
     fun simpleConnect() {
         val m = timer.start("Connect")
         val socket = Socket("localhost", port)

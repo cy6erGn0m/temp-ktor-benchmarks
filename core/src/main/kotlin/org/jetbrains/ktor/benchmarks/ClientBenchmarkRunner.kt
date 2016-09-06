@@ -45,6 +45,7 @@ class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(cla
         return object : Statement() {
             override fun evaluate() {
                 try {
+                    println("Running test ${child.name}")
                     val results = benchmarkAnnotation.concurrency.sortedDescending().map { concurrency ->
                         val allTimersForConcurrency = CopyOnWriteArrayList<Timer>()
 

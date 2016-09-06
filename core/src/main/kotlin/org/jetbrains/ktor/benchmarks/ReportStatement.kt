@@ -1,14 +1,9 @@
 package org.jetbrains.ktor.benchmarks
 
 import org.junit.runners.model.*
-import org.knowm.xchart.*
-import org.knowm.xchart.style.*
-import java.awt.*
-import java.awt.image.*
 import java.io.*
 import java.math.*
 import java.time.*
-import javax.imageio.*
 
 class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val results: Map<Int, Map<String, List<Timer.Measurement>>>) : Statement() {
     override fun evaluate() {
@@ -29,50 +24,37 @@ class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val 
         val allLabels = results.values.flatMap { it.values.flatMap { it.map { it.label } } }.distinct()
 
         for (m in allLabels) {
-            val chart = XYChartBuilder()
-                    .width(800).height(600)
-                    .title("${child.name} $m")
-                    .xAxisTitle("Concurrency").yAxisTitle("Time, ms")
-                    .build()
-
-//            chart.styler.theme = GGPlot2Theme()
-            chart.styler.defaultSeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Scatter
-            chart.styler.markerSize = 8
-            chart.styler.isYAxisLogarithmic = true
-            chart.styler.legendPosition = Styler.LegendPosition.InsideNW
-
             val filtered = results.entries.map { e -> e.key to (e.value[m] ?: emptyList()) }
 
             val xPoints = filtered.flatMap { pair -> pair.second.filter { it.laps.isNotEmpty()}.map { pair.first.toDouble() } }.toDoubleArray()
             val yPoints = filtered.flatMap { pair -> pair.second.map { it.laps.last().fromStart.toMillisExact().toDouble() } }.toDoubleArray()
 
-            val mainScatter = chart.addSeries(testClass.name.substringAfterLast('.'), xPoints, yPoints)
-
             val avXPoints = filtered.map { it.first.toDouble() }.toDoubleArray()
             val avYPoints = filtered.map { it.second.mapNotNull { it.laps.lastOrNull()?.fromStart?.toMillisExact()?.toDouble() }.average() }.toDoubleArray()
 
-            val averageLine = chart.addSeries(testClass.name.substringAfterLast('.') + " avg", avXPoints, avYPoints)
-            averageLine.xySeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Line
-            averageLine.lineColor = mainScatter.markerColor
+            val reportData = ReportData(
+                    testClass.name,
+                    child.declaringClass.name + "." + child.name,
+                    m,
+                    xPoints, yPoints,
+                    avXPoints, avYPoints)
 
-            val image =
-                    if (GraphicsEnvironment.isHeadless()) BufferedImage(800, 600, BufferedImage.TYPE_4BYTE_ABGR)
-                    else GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration.createCompatibleImage(800, 600, java.awt.Transparency.TRANSLUCENT)
-
-            image.createGraphics().apply {
-                chart.paint(this, 800, 600)
-                dispose()
+            val reportDataFile = reportDataFile(child, m, testClass)
+            reportDataFile.parentFile.mkdirs()
+            reportDataFile.outputStream().let(::ObjectOutputStream).use { os ->
+                os.writeObject(reportData)
             }
 
-            val file = File("target/charts/${safePathComponent(child.name)}/${safePathComponent(m)}.png")
-            file.parentFile.mkdirs()
+            val chart = fillChart("${child.name} $m", listOf(reportData))
 
-            ImageIO.write(image, "PNG", file)
+            val chartFile = File("target/charts/${safePathComponent(child.name)}/${safePathComponent(m)}.png")
+            chartFile.parentFile.mkdirs()
+
+            renderChart(chart, chartFile)
         }
     }
 
     private fun Duration.toMillisExact() = BigDecimal.valueOf(toMillis()) + BigDecimal.valueOf(nano.toLong()).divide(BigDecimal.valueOf(1000000L))
-    private fun safePathComponent(c: String) = c.replace("[^\\w\\d]+".toRegex(), " ").trim().replace("\\s+".toRegex(), " ")
 
     private fun List<Timer.Measurement>.toMetric(): ClientBenchmarkRunner.Metric {
         if (isEmpty()) {

@@ -10,8 +10,6 @@ class FightStatement(val child: FrameworkMethod, val next: Statement, val instan
         val maxDurationMillis = benchmarkAnnotation.maxDurationMillis
         val minDurationMills = benchmarkAnnotation.minDurationMillis
 
-        println("Running test ${child.name}")
-
         var count = 0
         val start = System.currentTimeMillis()
 
