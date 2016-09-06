@@ -32,20 +32,28 @@ class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val 
             val chart = XYChartBuilder()
                     .width(800).height(600)
                     .title("${child.name} $m")
-                    .xAxisTitle("Concurrency").yAxisTitle("Time")
+                    .xAxisTitle("Concurrency").yAxisTitle("Time, ms")
                     .build()
 
 //            chart.styler.theme = GGPlot2Theme()
             chart.styler.defaultSeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Scatter
             chart.styler.markerSize = 8
             chart.styler.isYAxisLogarithmic = true
+            chart.styler.legendPosition = Styler.LegendPosition.InsideNW
 
             val filtered = results.entries.map { e -> e.key to (e.value[m] ?: emptyList()) }
 
             val xPoints = filtered.flatMap { pair -> pair.second.filter { it.laps.isNotEmpty()}.map { pair.first.toDouble() } }.toDoubleArray()
             val yPoints = filtered.flatMap { pair -> pair.second.map { it.laps.last().fromStart.toMillisExact().toDouble() } }.toDoubleArray()
 
-            chart.addSeries(testClass.name.substringAfterLast('.'), xPoints, yPoints)
+            val mainScatter = chart.addSeries(testClass.name.substringAfterLast('.'), xPoints, yPoints)
+
+            val avXPoints = filtered.map { it.first.toDouble() }.toDoubleArray()
+            val avYPoints = filtered.map { it.second.mapNotNull { it.laps.lastOrNull()?.fromStart?.toMillisExact()?.toDouble() }.average() }.toDoubleArray()
+
+            val averageLine = chart.addSeries(testClass.name.substringAfterLast('.') + " avg", avXPoints, avYPoints)
+            averageLine.xySeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Line
+            averageLine.lineColor = mainScatter.markerColor
 
             val image =
                     if (GraphicsEnvironment.isHeadless()) BufferedImage(800, 600, BufferedImage.TYPE_4BYTE_ABGR)
