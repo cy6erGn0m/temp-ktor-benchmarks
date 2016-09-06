@@ -12,13 +12,18 @@ class PlainSocketConnectTest : AbstractConnectBenchmark() {
     private var acceptor: Thread? = null
 
     override fun start() {
-        socket = ServerSocket(port)
+        socket = ServerSocket().apply {
+            bind(InetSocketAddress(port))
+        }
         acceptor = thread {
             val socket = this.socket!!
 
             do {
                 try {
-                    socket.accept().close()
+                    socket.accept().apply {
+                        setSoLinger(true, 50)
+                        close()
+                    }
                 } catch (ignore: IOException) {
                 }
             } while (!Thread.interrupted())
