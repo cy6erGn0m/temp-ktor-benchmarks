@@ -5,7 +5,7 @@ import java.io.*
 import java.net.*
 
 abstract class AbstractBenchmark {
-    protected var port = 0 //findFreePort()
+    protected var port = 0
 
     protected abstract fun start()
 
@@ -13,9 +13,16 @@ abstract class AbstractBenchmark {
 
     @Before
     fun setUp() {
-        port = findFreePort()
-        start()
-        waitForPort(port)
+        do {
+            try {
+                port = findFreePort()
+                start()
+                waitForPort(port)
+            } catch (e: BindException) {
+                stop()
+                continue
+            }
+        } while (false)
     }
 
     @After
