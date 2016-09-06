@@ -14,7 +14,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <ktor.version>0.1.9-SNAPSHOT</ktor.version>
+        <ktor.version>0.2.2-SNAPSHOT</ktor.version>
     </properties>
 
     <dependencies>

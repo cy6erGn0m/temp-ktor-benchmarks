@@ -17,7 +17,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jetbrains</groupId>
+            <groupId>org.jetbrains.ktor</groupId>
             <artifactId>ktor-core</artifactId>
             <version>${ktor.version}</version>
         </dependency>

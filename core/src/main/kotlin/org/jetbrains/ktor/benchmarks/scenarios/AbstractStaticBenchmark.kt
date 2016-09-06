@@ -1,6 +1,7 @@
 package org.jetbrains.ktor.benchmarks.scenarios
 
 import org.jetbrains.ktor.benchmarks.*
+import org.jetbrains.ktor.nio.*
 import org.junit.*
 
 abstract class AbstractStaticBenchmark : AbstractBenchmark() {
@@ -11,36 +12,34 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
     val client = HttpClientRule(timer, port)
 
     @Test
-    @Benchmark(maxDurationMillis = 2000)
     fun localStaticText() {
         val connection = client.openConnection("localhost", port)
 
         val indexPage = timer.start("DL /static.txt")
-        connection.request {
+        val response = connection.requestBlocking {
             path = "/static.txt"
         }
 
-        Assert.assertEquals(200, connection.responseStatus.value)
+        Assert.assertEquals(200, response.status.value)
 
-        connection.responseStream.readBytes()
+        response.channel.asInputStream().readBytes()
         indexPage.end()
 
         connection.close()
     }
 
     @Test
-    @Benchmark(maxDurationMillis = 2000)
     fun localFileContent() {
         val connection = client.openConnection("localhost", port)
 
         val indexPage = timer.start("DL /localFile")
-        connection.request {
+        val response = connection.requestBlocking {
             path = "/localFile"
         }
 
-        Assert.assertEquals(200, connection.responseStatus.value)
+        Assert.assertEquals(200, response.status.value)
 
-        connection.responseStream.readBytes()
+        response.channel.asInputStream().readBytes()
         indexPage.end()
 
         connection.close()

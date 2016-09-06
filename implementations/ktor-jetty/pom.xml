@@ -13,7 +13,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jetbrains</groupId>
+            <groupId>org.jetbrains.ktor</groupId>
             <artifactId>ktor-jetty</artifactId>
             <version>${ktor.version}</version>
         </dependency>

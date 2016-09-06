@@ -1,6 +1,6 @@
 package org.jetbrains.ktor.benchmarks
 
-import org.jetbrains.ktor.auth.httpclient.*
+import org.jetbrains.ktor.client.*
 import org.junit.rules.*
 import org.junit.runner.*
 import org.junit.runners.model.*

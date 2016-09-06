@@ -26,6 +26,6 @@ class KtorJettyStaticBenchmarkTest : AbstractStaticBenchmark() {
     }
 
     override fun stop() {
-        server?.stop()
+        (server as? ApplicationHostStartable)?.stop()
     }
 }
