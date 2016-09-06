@@ -11,7 +11,7 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
     val client = HttpClientRule(timer, port)
 
     @Test
-    @Benchmark
+    @Benchmark(maxDurationMillis = 2000)
     fun localStaticText() {
         val connection = client.openConnection("localhost", port)
 
@@ -22,7 +22,25 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
 
         Assert.assertEquals(200, connection.responseStatus.value)
 
-        connection.responseStream.reader().readText()
+        connection.responseStream.readBytes()
+        indexPage.end()
+
+        connection.close()
+    }
+
+    @Test
+    @Benchmark(maxDurationMillis = 2000)
+    fun localFileContent() {
+        val connection = client.openConnection("localhost", port)
+
+        val indexPage = timer.start("DL /localFile")
+        connection.request {
+            path = "/localFile"
+        }
+
+        Assert.assertEquals(200, connection.responseStatus.value)
+
+        connection.responseStream.readBytes()
         indexPage.end()
 
         connection.close()
