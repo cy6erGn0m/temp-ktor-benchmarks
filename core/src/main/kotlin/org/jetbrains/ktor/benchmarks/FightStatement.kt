@@ -6,7 +6,7 @@ import org.junit.runners.model.*
 class FightStatement(val child: FrameworkMethod, val next: Statement, val instance: AbstractBenchmark, val benchmarkAnnotation: Benchmark) : Statement() {
     override fun evaluate() {
         val maxCount = benchmarkAnnotation.iterationsLimit
-        val minCount = Math.max(100, maxCount)
+        val minCount = Math.min(100, maxCount)
         val maxDurationMillis = benchmarkAnnotation.maxDurationMillis
         val minDurationMills = benchmarkAnnotation.minDurationMillis
 

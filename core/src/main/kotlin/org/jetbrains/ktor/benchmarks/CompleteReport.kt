@@ -89,8 +89,8 @@ fun fillChart(title: String, lines: List<ReportData>): XYChart {
     chart.styler.legendPosition = Styler.LegendPosition.InsideNW
 
     for (data in lines) {
-        chart.addSeries(data.testClassFqName, data.xPoints, data.yPoints)
-        val averageLine = chart.addSeries(data.testClassFqName + " avg", data.avXPoints, data.avYPoints)
+        chart.addSeries(data.testClassFqName.substringAfterLast("."), data.xPoints, data.yPoints)
+        val averageLine = chart.addSeries(data.testClassFqName.substringAfterLast(".") + " avg", data.avXPoints, data.avYPoints)
 
         averageLine.xySeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Line
     }
