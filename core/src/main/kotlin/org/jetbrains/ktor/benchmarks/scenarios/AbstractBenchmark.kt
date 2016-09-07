@@ -6,6 +6,7 @@ import java.io.*
 import java.net.*
 
 abstract class AbstractBenchmark : KtorBenchmark {
+    @Volatile
     protected var port = 0
 
     @Before
@@ -15,11 +16,11 @@ abstract class AbstractBenchmark : KtorBenchmark {
                 port = findFreePort()
                 start(port)
                 waitForPort(port)
+                break
             } catch (e: BindException) {
                 stop()
-                continue
             }
-        } while (false)
+        } while (true)
     }
 
     @After
@@ -28,7 +29,7 @@ abstract class AbstractBenchmark : KtorBenchmark {
     }
 
     companion object {
-        fun findFreePort() = ServerSocket(0).use { it.localPort }
+        fun findFreePort() = ServerSocket(0).use { it.reuseAddress = true; it.localPort }
         fun waitForPort(port: Int) {
             do {
                 Thread.sleep(50)

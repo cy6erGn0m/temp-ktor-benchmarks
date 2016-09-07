@@ -35,7 +35,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <forkMode>once</forkMode>
-                    <argLine>-Xmx1g</argLine>
+                    <argLine>-Xmx2g</argLine>
                 </configuration>
             </plugin>
         </plugins>

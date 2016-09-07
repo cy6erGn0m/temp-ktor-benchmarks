@@ -9,10 +9,11 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
     val timer = TimerRule()
 
     @get:Rule
-    val client = HttpClientRule(timer, port)
+    val client = HttpClientRule(timer)
 
     @Test
     fun localStaticText() {
+        require(port > 0)
         val connection = client.openConnection("localhost", port)
 
         val indexPage = timer.start("DL /static.txt")
@@ -30,6 +31,8 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
 
     @Test
     fun localFileContent() {
+        require(port > 0)
+
         val connection = client.openConnection("localhost", port)
 
         val indexPage = timer.start("DL /localFile")
