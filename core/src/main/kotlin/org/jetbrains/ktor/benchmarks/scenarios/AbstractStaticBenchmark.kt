@@ -13,7 +13,6 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
 
     @Test
     fun localStaticText() {
-        require(port > 0)
         val connection = client.openConnection("localhost", port)
 
         val indexPage = timer.start("DL /static.txt")
@@ -31,8 +30,6 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
 
     @Test
     fun localFileContent() {
-        require(port > 0)
-
         val connection = client.openConnection("localhost", port)
 
         val indexPage = timer.start("DL /localFile")

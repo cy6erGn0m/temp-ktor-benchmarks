@@ -22,9 +22,9 @@ class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(cla
                     warmUpTimer(DummyTimer)
                 }
 
-                for (m in children) {
-                    WarmUpTestStatement(testClass, m, warmUp, {}).evaluate()
-                }
+//                for (m in children) {
+//                    WarmUpTestStatement(testClass, m, warmUp, {}).evaluate()
+//                }
             }
         }
 

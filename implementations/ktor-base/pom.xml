@@ -9,18 +9,18 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>benchmarks-ktor-jetty</artifactId>
+    <artifactId>ktor-base</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.ktor</groupId>
-            <artifactId>ktor-base</artifactId>
-            <version>${project.version}</version>
+            <artifactId>ktor-hosts-common</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.ktor</groupId>
-            <artifactId>ktor-jetty</artifactId>
-            <version>${ktor.version}</version>
+            <artifactId>ktor-beanchmarks-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

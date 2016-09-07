@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>benchmarks-ktor-jetty</artifactId>
+    <artifactId>benchmarks-ktor-netty</artifactId>
 
     <dependencies>
         <dependency>
@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.ktor</groupId>
-            <artifactId>ktor-jetty</artifactId>
+            <artifactId>ktor-netty</artifactId>
             <version>${ktor.version}</version>
         </dependency>
     </dependencies>

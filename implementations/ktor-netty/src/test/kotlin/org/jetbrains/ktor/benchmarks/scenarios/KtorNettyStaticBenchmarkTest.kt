@@ -6,12 +6,12 @@ import org.junit.*
 import org.junit.runner.*
 
 @RunWith(ClientBenchmarkRunner::class)
-class KtorJettyStaticBenchmarkTest : KtorStaticBenchmark() {
+class KtorNettyStaticBenchmarkTest : KtorStaticBenchmark() {
     override val port: Int
         get() = server.port
 
     companion object {
-        val server = object : AbstractKtorJettyBenchmark() {
+        val server = object : AbstractKtorNettyBenchmark() {
             override fun createRoute(routing: Routing) {
                 KtorStaticBenchmark.createRoute(routing)
             }

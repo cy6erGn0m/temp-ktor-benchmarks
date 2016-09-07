@@ -1,11 +1,11 @@
 package org.jetbrains.ktor.benchmarks.scenarios
 
 import org.jetbrains.ktor.host.*
-import org.jetbrains.ktor.jetty.*
+import org.jetbrains.ktor.netty.*
 
-abstract class AbstractKtorJettyBenchmark : AbstractKtorBenchmarkServer() {
+abstract class AbstractKtorNettyBenchmark : AbstractKtorBenchmarkServer() {
     override fun createServer(port: Int): ApplicationHostStartable {
-        return embeddedJettyServer(port) {
+        return embeddedNettyServer(port) {
             createRoute(this)
         }
     }

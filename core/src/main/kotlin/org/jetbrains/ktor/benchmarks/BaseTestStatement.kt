@@ -9,10 +9,12 @@ import org.junit.runners.model.*
 
 internal abstract class BaseTestStatement(val testClass: TestClass, val child: FrameworkMethod, val description: Description, val collector: (Timer) -> Unit) : Statement() {
     final override fun evaluate() {
+        System.gc()
         val instance = testClass.onlyConstructor.newInstance()
         if (instance !is AbstractBenchmark) {
             throw IllegalArgumentException("Test class should inherit AbstractBenchmark")
         }
+        System.gc()
 
         val collect = CollectTimersStatement(testClass, instance, collector)
         val mainRun = mainStatement(collect, instance)
