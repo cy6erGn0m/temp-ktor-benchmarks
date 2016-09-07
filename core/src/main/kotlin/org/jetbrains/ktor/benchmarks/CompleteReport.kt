@@ -1,6 +1,5 @@
 package org.jetbrains.ktor.benchmarks
 
-import org.jetbrains.ktor.util.*
 import org.junit.runners.model.*
 import org.knowm.xchart.*
 import org.knowm.xchart.style.*
@@ -59,12 +58,18 @@ fun generateFullReport(dir: File) {
     }
 }
 
-private fun readReportData(files: List<File>) = files.map { f ->
-    f.inputStream()
-            .buffered()
-            .let(::ObjectInputStream)
-            .use(ObjectInputStream::readObject)
-            .cast<ReportData>()
+fun readReportData(files: List<File>): List<ReportData> = files.map(::readReportData)
+
+fun readReportData(f: File) = f.inputStream()
+        .buffered()
+        .let(::ObjectInputStream)
+        .use(ObjectInputStream::readObject) as ReportData
+
+fun ReportData.writeReportData(reportDataFile: File) {
+    reportDataFile.parentFile.mkdirs()
+    reportDataFile.outputStream().let(::ObjectOutputStream).use { os ->
+        os.writeObject(this)
+    }
 }
 
 fun main(args: Array<String>) {
@@ -73,7 +78,7 @@ fun main(args: Array<String>) {
 
 fun fillChart(title: String, lines: List<ReportData>): XYChart {
     val chart = XYChartBuilder()
-            .width(800).height(600)
+            .width(DefaultChartWidth).height(DefaultChartHeight)
             .title(title)
             .xAxisTitle("Concurrency").yAxisTitle("Time, ms")
             .build()
@@ -94,12 +99,14 @@ fun fillChart(title: String, lines: List<ReportData>): XYChart {
 }
 
 fun renderChart(chart: XYChart, file: File) {
+    file.parentFile.mkdirs()
+
     val image =
-            if (GraphicsEnvironment.isHeadless()) BufferedImage(800, 600, BufferedImage.TYPE_4BYTE_ABGR)
-            else GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration.createCompatibleImage(800, 600, java.awt.Transparency.TRANSLUCENT)
+            if (GraphicsEnvironment.isHeadless()) BufferedImage(chart.width, chart.height, BufferedImage.TYPE_4BYTE_ABGR)
+            else GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration.createCompatibleImage(chart.width, chart.height, java.awt.Transparency.TRANSLUCENT)
 
     image.createGraphics().apply {
-        chart.paint(this, 800, 600)
+        chart.paint(this, chart.width, chart.height)
         dispose()
     }
 
@@ -111,3 +118,6 @@ fun reportDataFileDir(child: FrameworkMethod, name: String) = File("target/bench
 fun reportDataFile(child: FrameworkMethod, name: String, testClass: TestClass) = File(reportDataFileDir(child, name), safePathComponent(testClass.name) + ".dat")
 
 fun safePathComponent(c: String) = c.replace("[^\\w\\d._-]+".toRegex(), " ").trim().replace("\\s+".toRegex(), " ")
+
+private val DefaultChartWidth = 800
+private val DefaultChartHeight = 800

@@ -5,7 +5,7 @@ import java.io.*
 import java.math.*
 import java.time.*
 
-class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val results: Map<Int, Map<String, List<Timer.Measurement>>>) : Statement() {
+class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val results: Map<Int, Map<String, List<Timer.Measurement>>>, val renderCharts: Boolean = false) : Statement() {
     override fun evaluate() {
         val allMeasurements = results.values.flatMap { it.values.flatMap { it } }
 
@@ -40,17 +40,12 @@ class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val 
                     avXPoints, avYPoints)
 
             val reportDataFile = reportDataFile(child, m, testClass)
-            reportDataFile.parentFile.mkdirs()
-            reportDataFile.outputStream().let(::ObjectOutputStream).use { os ->
-                os.writeObject(reportData)
+            reportData.writeReportData(reportDataFile)
+
+            if (renderCharts) {
+                val chart = fillChart("${child.name} $m", listOf(reportData))
+                renderChart(chart, File("target/charts/${safePathComponent(child.name)}/${safePathComponent(m)}.png"))
             }
-
-            val chart = fillChart("${child.name} $m", listOf(reportData))
-
-            val chartFile = File("target/charts/${safePathComponent(child.name)}/${safePathComponent(m)}.png")
-            chartFile.parentFile.mkdirs()
-
-            renderChart(chart, chartFile)
         }
     }
 
