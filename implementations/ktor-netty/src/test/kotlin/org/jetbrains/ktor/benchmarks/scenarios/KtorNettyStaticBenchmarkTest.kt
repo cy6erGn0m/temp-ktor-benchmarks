@@ -11,22 +11,12 @@ class KtorNettyStaticBenchmarkTest : KtorStaticBenchmark() {
         get() = server.port
 
     companion object {
+        @JvmStatic
+        @get:ClassRule
         val server = object : AbstractKtorNettyBenchmark() {
             override fun createRoute(routing: Routing) {
                 KtorStaticBenchmark.createRoute(routing)
             }
-        }
-
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            server.setUp()
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun tearDown() {
-            server.teamDown()
         }
     }
 }

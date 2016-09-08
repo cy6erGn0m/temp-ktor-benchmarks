@@ -13,6 +13,8 @@ class KtorJettyConnectTest : AbstractConnectBenchmark() {
         get() = server.port
 
     companion object {
+        @JvmStatic
+        @get:ClassRule
         val server = object : AbstractKtorJettyBenchmark() {
             override fun createRoute(routing: Routing) {
                 routing.apply {
@@ -21,18 +23,6 @@ class KtorJettyConnectTest : AbstractConnectBenchmark() {
                     }
                 }
             }
-        }
-
-        @BeforeClass
-        @JvmStatic
-        fun setUp() {
-            server.setUp()
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun tearDown() {
-            server.teamDown()
         }
     }
 }

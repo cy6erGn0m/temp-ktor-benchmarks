@@ -13,7 +13,9 @@ class PlainSocketConnectTest : AbstractConnectBenchmark() {
         get() = server.port
 
     companion object {
-        val server = object : KtorBenchmarkServer() {
+        @JvmStatic
+        @get:ClassRule
+        val server = object : AbstractBenchmarkServer() {
             private var socket: ServerSocket? = null
             private var acceptor: Thread? = null
 
@@ -40,18 +42,6 @@ class PlainSocketConnectTest : AbstractConnectBenchmark() {
                 socket?.close()
                 acceptor?.interrupt()
             }
-        }
-
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            server.setUp()
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun tearDown() {
-            server.teamDown()
         }
     }
 }

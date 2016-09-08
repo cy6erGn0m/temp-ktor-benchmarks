@@ -4,7 +4,7 @@ import org.jetbrains.ktor.benchmarks.*
 import org.jetbrains.ktor.host.*
 import org.jetbrains.ktor.routing.*
 
-abstract class AbstractKtorBenchmarkServer : KtorBenchmarkServer() {
+abstract class AbstractKtorBenchmarkServer : AbstractBenchmarkServer() {
     protected abstract fun createRoute(routing: Routing)
 
     abstract fun createServer(port: Int): ApplicationHostStartable

@@ -1,9 +1,12 @@
 package org.jetbrains.ktor.benchmarks
 
+import org.junit.rules.*
+import org.junit.runner.*
+import org.junit.runners.model.*
 import java.io.*
 import java.net.*
 
-abstract class KtorBenchmarkServer {
+abstract class AbstractBenchmarkServer : TestRule {
     @Volatile
     var port: Int = 0
         private set
@@ -26,6 +29,23 @@ abstract class KtorBenchmarkServer {
 
     fun teamDown() {
         stopImpl()
+    }
+
+    override fun apply(base: Statement, description: Description): Statement {
+        if (description.isSuite) {
+            return object : Statement() {
+                override fun evaluate() {
+                    setUp()
+                    try {
+                        base.evaluate()
+                    } finally {
+                        teamDown()
+                    }
+                }
+            }
+        } else {
+            return base
+        }
     }
 
     companion object {

@@ -14,7 +14,9 @@ class PlainSocketStaticBenchmarkTest : AbstractStaticBenchmark() {
         get() = server.port
 
     companion object {
-        val server = object : KtorBenchmarkServer() {
+        @JvmStatic
+        @get:ClassRule
+        val server = object : AbstractBenchmarkServer() {
             private val pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2)
             private var socket: ServerSocket? = null
             private var acceptor: Thread? = null
@@ -67,18 +69,6 @@ class PlainSocketStaticBenchmarkTest : AbstractStaticBenchmark() {
                     }
                 }
             }
-        }
-
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            server.setUp()
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun tearDown() {
-            server.teamDown()
         }
     }
 
