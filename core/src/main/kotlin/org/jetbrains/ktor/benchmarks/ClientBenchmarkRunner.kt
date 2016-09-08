@@ -5,6 +5,7 @@ import org.junit.runner.*
 import org.junit.runner.notification.*
 import org.junit.runners.*
 import org.junit.runners.model.*
+import java.lang.invoke.*
 import java.time.*
 import java.util.concurrent.*
 import kotlin.reflect.*
@@ -41,6 +42,7 @@ class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(cla
     private fun runChildImpl(child: FrameworkMethod, description: Description): Statement {
         val benchmarkAnnotation = child.getAnnotation(Benchmark::class.java) ?: defaultBenchmark
         val pool = Executors.newFixedThreadPool(benchmarkAnnotation.concurrency.max() ?: 1)
+        val methodNotBound = MethodHandles.lookup().unreflect(child.method)
 
         return object : Statement() {
             override fun evaluate() {
@@ -49,7 +51,7 @@ class ClientBenchmarkRunner(clazz: Class<*>) : ParentRunner<FrameworkMethod>(cla
                     val results = benchmarkAnnotation.concurrency.sortedDescending().map { concurrency ->
                         val allTimersForConcurrency = CopyOnWriteArrayList<Timer>()
 
-                        val singleRun = FightTestStatement(testClass, child, description, benchmarkAnnotation, { allTimersForConcurrency.add(it) })
+                        val singleRun = FightTestStatement(testClass,  methodNotBound, child, description, benchmarkAnnotation, { allTimersForConcurrency.add(it) })
                         val concurrentRun = ConcurrentStatement(singleRun, EmptyStatement, pool, concurrency)
 
                         concurrentRun.evaluate()

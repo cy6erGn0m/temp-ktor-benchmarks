@@ -1,12 +1,12 @@
 package org.jetbrains.ktor.benchmarks
 
-import org.jetbrains.ktor.benchmarks.scenarios.*
 import org.junit.runners.model.*
+import java.lang.invoke.*
 
-class FightStatement(val child: FrameworkMethod, val next: Statement, val instance: AbstractBenchmark, val benchmarkAnnotation: Benchmark) : Statement() {
+class FightStatement(val method: MethodHandle, val next: Statement, val benchmarkAnnotation: Benchmark) : Statement() {
     override fun evaluate() {
         val maxCount = benchmarkAnnotation.iterationsLimit
-        val minCount = Math.min(100, maxCount)
+        val minCount = Math.min(1000, maxCount)
         val maxDurationMillis = benchmarkAnnotation.maxDurationMillis
         val minDurationMills = benchmarkAnnotation.minDurationMillis
 
@@ -17,7 +17,7 @@ class FightStatement(val child: FrameworkMethod, val next: Statement, val instan
                 && (count < minCount || ((System.currentTimeMillis() - start) < minDurationMills))) {
 
             count++
-            child.invokeExplosively(instance)
+            method.invokeWithArguments()
         }
 
         next.evaluate()

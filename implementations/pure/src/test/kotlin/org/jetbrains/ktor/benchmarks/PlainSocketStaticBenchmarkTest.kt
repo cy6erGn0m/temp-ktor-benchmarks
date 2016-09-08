@@ -58,7 +58,7 @@ class PlainSocketStaticBenchmarkTest : AbstractStaticBenchmark() {
                 client.inputStream.reader(Charsets.ISO_8859_1).buffered().use { request ->
                     client.outputStream.writer(Charsets.ISO_8859_1).buffered().use { response ->
                         val seq = request.lineSequence()
-                        val headers = seq.takeWhile(String::isNotBlank)
+                        /*val headers = */seq.takeWhile(String::isNotBlank)
 
                         response.appendln("HTTP/1.1 200 OK")
                         response.appendln("Content-Type: text/plain;charset=iso-8859-1")

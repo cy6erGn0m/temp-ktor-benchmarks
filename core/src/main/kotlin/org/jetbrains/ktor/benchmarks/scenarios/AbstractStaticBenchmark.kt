@@ -29,6 +29,7 @@ abstract class AbstractStaticBenchmark : AbstractBenchmark() {
     }
 
     @Test
+    @Benchmark
     fun localFileContent() {
         val connection = client.openConnection("localhost", port)
 

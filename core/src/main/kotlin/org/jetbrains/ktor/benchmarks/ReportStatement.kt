@@ -24,9 +24,9 @@ class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val 
         val allLabels = results.values.flatMap { it.values.flatMap { it.map { it.label } } }.distinct()
 
         for (m in allLabels) {
-            val filtered = results.entries.map { e -> e.key to (e.value[m] ?: emptyList()) }
+            val filtered = results.entries.map { e -> e.key to (e.value[m]?.filter { it.laps.isNotEmpty() } ?: emptyList()) }
 
-            val xPoints = filtered.flatMap { pair -> pair.second.filter { it.laps.isNotEmpty()}.map { pair.first.toDouble() } }.toDoubleArray()
+            val xPoints = filtered.flatMap { pair -> pair.second.map { pair.first.toDouble() } }.toDoubleArray()
             val yPoints = filtered.flatMap { pair -> pair.second.map { it.laps.last().fromStart.toMillisExact().toDouble() } }.toDoubleArray()
 
             val avXPoints = filtered.map { it.first.toDouble() }.toDoubleArray()
@@ -41,6 +41,22 @@ class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val 
 
             val reportDataFile = reportDataFile(child, m, testClass)
             reportData.writeReportData(reportDataFile)
+
+            buildString {
+                appendln("$m throughput")
+
+                for ((concurrency, pts) in filtered) {
+                    if (pts.isNotEmpty()) {
+                        val count = pts.size
+                        val startNanos = pts.minBy { it.start }!!.start
+                        val endNanos = pts.maxBy { it.laps.last().timestamp }!!.laps.last().timestamp
+
+                        val th = (count * 1e9) / (endNanos - startNanos).toDouble()
+
+                        appendln("${concurrency.toString().padStart(3, ' ')} $th ops/s")
+                    }
+                }
+            }.let(::println)
 
             if (renderCharts) {
                 val chart = fillChart("${child.name} $m", listOf(reportData))

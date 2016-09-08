@@ -1,12 +1,12 @@
 package org.jetbrains.ktor.benchmarks
 
-import org.jetbrains.ktor.benchmarks.scenarios.*
 import org.junit.runners.model.*
+import java.lang.invoke.*
 
-internal class WarmUpStatement(val child: FrameworkMethod, val next: Statement, val instance: AbstractBenchmark) : Statement() {
+internal class WarmUpStatement(val method: MethodHandle, val next: Statement) : Statement() {
     override fun evaluate() {
         for (i in 1..10) {
-            child.invokeExplosively(instance)
+            method.invokeWithArguments()
         }
         next.evaluate()
     }
