@@ -8,4 +8,6 @@ class ReportData(val testClassFqName: String,
                  val xPoints: DoubleArray,
                  val yPoints: DoubleArray,
                  val avXPoints: DoubleArray,
-                 val avYPoints: DoubleArray) : Serializable
+                 val avYPoints: DoubleArray,
+                 val thXPoints: DoubleArray,
+                 val thYPoints: DoubleArray) : Serializable

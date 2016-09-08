@@ -30,14 +30,26 @@ class ReportStatement(val testClass: TestClass, val child: FrameworkMethod, val 
             val yPoints = filtered.flatMap { pair -> pair.second.map { it.laps.last().fromStart.toMillisExact().toDouble() } }.toDoubleArray()
 
             val avXPoints = filtered.map { it.first.toDouble() }.toDoubleArray()
-            val avYPoints = filtered.map { it.second.mapNotNull { it.laps.lastOrNull()?.fromStart?.toMillisExact()?.toDouble() }.average() }.toDoubleArray()
+            val avYPoints = filtered.map { it.second.map { it.laps.last().fromStart.toMillisExact().toDouble() }.average() }.toDoubleArray()
+
+            val throughputXPoints = avXPoints
+            val throughputYPoints = filtered.map { pair ->
+                val pts = pair.second
+
+                val count = pts.size
+                val startNanos = pts.minBy { it.start }!!.start
+                val endNanos = pts.maxBy { it.laps.last().timestamp }!!.laps.last().timestamp
+
+                (count * 1e9) / (endNanos - startNanos).toDouble()
+            }.toDoubleArray()
 
             val reportData = ReportData(
                     testClass.name,
                     child.declaringClass.name + "." + child.name,
                     m,
                     xPoints, yPoints,
-                    avXPoints, avYPoints)
+                    avXPoints, avYPoints,
+                    throughputXPoints, throughputYPoints)
 
             val reportDataFile = reportDataFile(child, m, testClass)
             reportData.writeReportData(reportDataFile)
