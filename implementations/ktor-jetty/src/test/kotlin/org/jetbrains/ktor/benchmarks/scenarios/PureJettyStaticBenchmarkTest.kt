@@ -27,7 +27,9 @@ class PureJettyStaticBenchmarkTest : AbstractStaticBenchmark() {
                             when (request.requestURI) {
                                 "/static.txt" -> response.writer.apply { append("OK"); flush() }
                                 "/localFile" -> {
-                                    PureJettyStaticBenchmarkTest::class.java.classLoader.getResourceAsStream("logback.xml").copyTo(response.outputStream)
+                                    PureJettyStaticBenchmarkTest::class.java.classLoader.getResourceAsStream("logback.xml")!!.use {
+                                        it.copyTo(response.outputStream)
+                                    }
                                     response.outputStream.flush()
                                 }
                                 else -> response.sendError(HttpServletResponse.SC_NOT_FOUND)
